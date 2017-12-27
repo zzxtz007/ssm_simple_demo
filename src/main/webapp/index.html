@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+<div>
+	<input type="text" id="search">
+	<button id="searchBtn">搜索</button>
+</div>
+<div>
+	<table></table>
+</div>
+<div>
+	<button onclick="jump(this)">首页</button>
+	<button onclick="jump(this)">上一页</button>
+	<button onclick="jump(this)">下一页</button>
+	<button onclick="jump(this)">尾页</button>
+</div>
+<script type="text/javascript" src="/js/jquery3.2.1.js"></script>
+<script type="text/javascript">
+    var searchInfo = {};
+    var totelPage = 1;
+    var nowPage = 1;
+    var pageSize = 5;
+
+    function search() {
+        nowPage=1;
+        setSearch();
+        getPage().done(function () {
+            gotoPage();
+        });
+    }
+
+    $(function () {
+        $("#searchBtn").on('click', function () {
+            search();
+        });
+    });
+
+    function setSearch() {
+        var search = $("#search");
+        searchInfo["name"] = search.val() === "" ? null : search.val();
+        searchInfo["startIndex"] = (nowPage - 1) * pageSize;
+        searchInfo["count"] = pageSize;
+    }
+
+
+    function getPage() {
+        return $.ajax({
+            url: "/api/score/searchCount",
+            type: "GET",
+            data: searchInfo
+        })
+            .done(function (respone) {
+                pageSelecttor(respone);
+            })
+            .fail(function () {
+                alert("网络错误");
+            })
+    }
+
+    function pageSelecttor(respone) {
+        switch (respone.status) {
+            case 0:
+                totelPage = respone.count % pageSize === 0 ? respone.count / pageSize : Math.ceil(respone.count / pageSize);
+                break;
+            case 1:
+                alert("错误1");
+                break;
+            case 2:
+                alert("错误2");
+                break;
+            default:
+                alert("错误其他");
+                break;
+        }
+    }
+
+    function drawTable(scoreBos) {
+        var table = $("table");
+        table.text("");
+        for (var score of scoreBos) {
+            var tr = $("<tr id=" + score.id + "></tr>");
+            table.append(tr);
+            var td = $("<td>id：" + score.id + "</td>");
+            tr.append(td);
+            var td = $("<td>姓名：" + score.studentId.name + "</td>");
+            tr.append(td);
+            var td = $("<td>课程：" + score.lesson + "</td>");
+            tr.append(td);
+            var td = $("<td>成绩：" + score.score + "</td>");
+            tr.append(td);
+        }
+    }
+
+    function searchSelecttor(respone) {
+        switch (respone.status) {
+            case 0:
+                drawTable(respone.scoreBos);
+                break;
+            case 1:
+                alert("错误1");
+                break;
+            case 2:
+                alert("错误2");
+                break;
+            default:
+                alert("错误其他");
+                break;
+        }
+    }
+
+    function gotoPage() {
+        setSearch();
+        return $.ajax({
+            url: "/api/score/search",
+            type: "GET",
+            data: searchInfo
+        })
+            .done(function (respone) {
+                console.log(respone);
+                searchSelecttor(respone);
+            })
+            .fail(function () {
+                alert("网络错误");
+            })
+    }
+    function jump(e) {
+        console.log(e);
+        var btn = $(e);
+		switch (btn.text()){
+			case '首页':
+			    nowPage=1;
+			    break;
+			case '上一页':
+			    if (nowPage===1){
+			        break;
+			    }
+			    nowPage--;
+			    break;
+			case '下一页':
+			    if (nowPage===totelPage) {
+			        break;
+			    }
+			    nowPage++;
+			    break;
+			case '尾页':
+			    nowPage=totelPage;
+			    break;
+			default:
+			    return ;
+		}
+        console.log(nowPage);
+        gotoPage();
+    }
+
+</script>
+</body>
+</html>

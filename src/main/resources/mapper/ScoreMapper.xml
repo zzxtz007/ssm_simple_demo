@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.haha233.dal.ScoreMapper">
+    <insert id="insert" parameterType="top.haha233.model.po.ScorePo">
+        INSERT INTO score (student_id, lesson, score) VALUES (#{studentId}, #{lesson}, #{score});
+    </insert>
+    <delete id="delete" parameterType="top.haha233.model.po.ScorePo">
+        DELETE FROM score
+        WHERE id = #{score.id};
+    </delete>
+    <update id="update" parameterType="top.haha233.model.po.ScorePo">
+        update score
+        <set>
+            <if test="score.studentId!=null">
+                student_id=#{score.studentId},
+            </if>
+            <if test="score.lesson!=null">
+                lesson=#{score.lesson},
+            </if>
+            <if test="score.score!=null">
+                score=#{score.score},
+            </if>
+        </set>
+        where id=#{score.id}
+    </update>
+    <resultMap id="score" type="top.haha233.model.bo.ScoreBo" autoMapping="true">
+        <association property="studentId" autoMapping="true" javaType="top.haha233.model.po.StuPo"
+                     columnPrefix="s_"/>
+    </resultMap>
+    <sql id="selectHeard" >
+
+        from score
+        LEFT JOIN student
+        ON score.student_id = student.id
+        <where>
+            <if test="score.id!=null">
+                id=#{score.id}
+            </if>
+            <if test="score.studentId!=null">
+                and student_id=#{score.studentId}
+            </if>
+            <if test="score.lesson!=null">
+                and lesson like "%"#{score.lesson}"%"
+            </if>
+        </where>
+    </sql>
+    <select id="query" parameterType="top.haha233.model.po.ScorePo" resultMap="score">
+        select
+        score.id id,
+        student_id s_id,
+        lesson,
+        score,
+        name s_name
+        <include refid="selectHeard"/>
+        LIMIT #{start},#{count}
+    </select>
+    <select id="count" parameterType="top.haha233.model.po.ScorePo" resultType="int">
+        select
+        count(score.id)
+        <include refid="selectHeard"/>
+    </select>
+</mapper>
